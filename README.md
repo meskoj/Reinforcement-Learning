@@ -8,9 +8,9 @@ This repository contains practical examples from the book "Reinforcement Learnin
 
 ## Usage
 To run the code, first of all, clone the repository.
-'''bash
+```shell
 git clone https://github.com/meskoj/Reinforcement-Learning.git
-'''
+```
 Then, it is possible to select the exercise and run it using python.
 
 ## Acknowledgments
