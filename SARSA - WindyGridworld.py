@@ -101,7 +101,7 @@ class windy_gridworld():
                 next_state = (x-1, y - self.wind[x])
 
             if (next_state[0] < 0 or next_state[0] > self.dim1-1 or next_state[1] < 0 or next_state[1] > self.dim2-1):  # Out of grid
-                reward = -10
+                reward = -2
                 # State for going out of the grid
                 return (-1, -1), reward, True
 
@@ -152,7 +152,7 @@ class SARSA_Agent():
 
         # Implement a state for going out of the grid
         self.Q[(-1, -1)] = {}
-        self.Q[(-1, -1)]["north"] = 0
+        self.Q[(-1, -1)]["north"] = -5
 
     def choose_action(self, state):
         """Chooses the next action to be taken by the agent.
@@ -263,6 +263,5 @@ def main():
     plt.title('Number of Steps per Episode in SARSA Windy Gridworld')
     plt.legend()
     plt.show()
-
 if __name__ == "__main__":
     main()
