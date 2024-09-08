@@ -37,13 +37,14 @@ def move(state, action):
 
     Args:
         state (tuple): Current position of the agent in the grid as (x, y).
-        action (list): Current action to be taken by the agent.
+        action (str): Current action to be taken by the agent.
 
     Returns:
         int: Reward for the action taken.
-        list: New state of the agent after taking the action.
+        tuple: New state of the agent after taking the action.
     """
     x, y = state
+    # These are special states, are shown in the book
     if state == (1, 0):  # If state is (1,0), move to (1,4) and add 10 to the reward
         reward = 10
         return reward, (1, 4)
@@ -52,7 +53,7 @@ def move(state, action):
         return reward, (3, 2)
 
     # If the action allows to remain inside the gridworld, then reward is 0.
-    # Otherwise, reward is -1
+    # Otherwise, reward is -1 and the agent remains in the same state.
     if (action == "north" and y > 0):
         reward = 0
         return reward, (x, y-1)
@@ -77,10 +78,10 @@ def policy_evaluation(actions, states, value_function):
     Args:
         actions (list): List of possible actions that the agent can take.
         states (list): List of all possible states in the gridworld.
-        value_function (list): List of values for each state in the gridworld.
+        value_function (dic): List of values for each state in the gridworld.
 
     Returns:
-        list: Value function for the given policy.
+        float: Value function for the given policy.
     """
     THRESHOLD = 0.01
     global GAMMA
@@ -110,7 +111,7 @@ def policy_improvement(actions, states, value_function, policy):
     Args:
         actions (list): List of possible actions that the agent can take.
         states (list): List of all possible states in the gridworld.
-        value_function (list): List of values for each state in the gridworld.
+        value_function (dic): List of values for each state in the gridworld.
         policy (list): List of actions for each state, based on the current policy.
 
     Returns:
@@ -166,11 +167,12 @@ def main():
 
     value_df = pd.DataFrame(value_data)
     policy_df = pd.DataFrame(policy_data)
-
+    
+    print("\n")
     print("Value Function:")
     print(value_df.to_string(index=False, header=False))
 
-    print("\nPolicy:")
+    print("\n Policy:")
     print(policy_df.to_string(index=False, header=False))
 
 
