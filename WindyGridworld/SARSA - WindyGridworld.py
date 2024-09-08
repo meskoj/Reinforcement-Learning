@@ -42,7 +42,7 @@ class windy_gridworld():
         and appends each grid position as a tuple (x, y) to the states.
 
         Returns:
-            list: Dictionary containing all possible states in the gridworld.
+            dict: Dictionary containing all possible states in the gridworld.
         """
         states = []
         for x in range(self.dim1):
@@ -104,8 +104,8 @@ class windy_gridworld():
             if (next_state[0] < 0 or next_state[0] > self.dim1-1 or next_state[1] < 0 or next_state[1] > self.dim2-1):
                 reward = -2
                 # Pay attention, if the agent goes out of the grid, in the update function (not terminated) is 0,
-                # so the Q-value of the next state is 0
-                return (2, 2), reward, True
+                # so the Q-value of the next state is 0. (Is possible to return whatever state)
+                return (0, 0), reward, True
 
             elif (next_state == self.goal):
                 reward = 10
