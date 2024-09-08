@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Author: Marco Meschini
-# Created: 2024-08-17
+# Created: 08-09-2024
 #
 
 """
@@ -18,9 +18,11 @@ Also the dealer can have only cards with value 1-10 (where 1 is ace), which acco
 
 But it seems the programmers also kept the not possible states of 0 sum or 0 value card with dealer.
 Thus the observation space being a tuple (Discrete(32), Discrete(11), Discrete(2)).."""
-"""0: Stick
+"""Possible actions:
+    0: Stick
+    1: Hit
+"""
 
-1: Hit"""
 
 
 
@@ -29,24 +31,20 @@ from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
 
-import seaborn as sns
-from matplotlib.patches import Patch
-from tqdm import tqdm
-
-class MonteCarloAgentEpsilonGreedy:
+class QlearningAgent:
     def __init__(
             self,
             env,
             discount_factor,
-            epsilon):
+            exploration_rate,
+            learning_rate):
 
         self.env = env
         self.gamma = discount_factor
-        self.epsilon = epsilon  # Exploration rate
+        self.epsilon = exploration_rate
+        self.alpha = learning_rate
         # Create a dictionary to store the Q-values
         self.Q_values = defaultdict(lambda: np.zeros(env.action_space.n))
-        self.Returns = defaultdict(lambda: np.zeros(env.action_space.n))
-        self.N = defaultdict(lambda: np.zeros(env.action_space.n))
 
     def get_action(self, obs):
         """
@@ -60,32 +58,31 @@ class MonteCarloAgentEpsilonGreedy:
         """
 
         if np.random.rand() < self.epsilon:
-            action = self.env.action_space.sample() # Choose a random action
+            # Choose a random action
+            action = self.env.action_space.sample()  
         else:
-            action = int(np.argmax(self.Q_values[obs])) # Choose the action with the highest Q-value
+            # Choose the action with the highest Q-value
+            action = int(np.argmax(self.Q_values[obs]))
 
         return action
 
-    def update_Q_values(self, episode):
+    def update_Q_values(self, state, action, reward, next_state, done):
         """
         Update Q-values based on the episode.
 
         Args:
             episode: List of (state, action, reward) tuples.
         """
-        G = 0
-        for state, action, reward in reversed(episode):
-            G = self.gamma * G + reward
-            self.Returns[state][action] += G
-            self.N[state][action] += 1
-            # Update rule for Q-values
-            self.Q_values[state][action] = self.Returns[state][action] / self.N[state][action]
+        self.Q_values[state][action] = self.Q_values[state][action] +  self.alpha * \
+            (reward + self.gamma *
+             (not done) * np.max(self.Q_values[next_state]) - self.Q_values[state][action])
 
     def plot_Q_values(self):
         # Initialize Q-tables for usable and non-usable ace
         q_table_usable_ace = np.full((18, 11), -np.inf)
         q_table_non_usable_ace = np.full((18, 11), -np.inf)
-        action_table_usable_ace = np.full((18, 11), 'stick')  # Default action is 'stick'
+        action_table_usable_ace = np.full(
+            (18, 11), 'stick')  # Default action is 'stick'
         action_table_non_usable_ace = np.full((18, 11), 'stick')
 
         # Fill the Q-tables with the maximum Q-value for each state
@@ -98,15 +95,17 @@ class MonteCarloAgentEpsilonGreedy:
                 q_value = np.max(actions)
                 if usable_ace:
                     if q_value > q_table_usable_ace[row, col]:
-                            q_table_usable_ace[row, col] = round(q_value, 2)
-                            action_table_usable_ace[row, col] = 'stick' if best_action == 0 else 'hit'
+                        q_table_usable_ace[row, col] = round(q_value, 2)
+                        action_table_usable_ace[row,
+                                                col] = 'stick' if best_action == 0 else 'hit'
                 else:
                     if q_value > q_table_non_usable_ace[row, col]:
                         q_table_non_usable_ace[row, col] = round(q_value, 2)
-                        action_table_non_usable_ace[row, col] = 'stick' if best_action == 0 else 'hit'
+                        action_table_non_usable_ace[row,
+                                                    col] = 'stick' if best_action == 0 else 'hit'
             # Create a table for usable ace
         fig, ax = plt.subplots(2, 1, figsize=(30, 10))
-        
+
         # Table for usable ace
         cell_text_usable_ace = []
         cell_colors_usable_ace = []
@@ -115,20 +114,20 @@ class MonteCarloAgentEpsilonGreedy:
             row_colors = []
             for j in range(10):
                 row_text.append(f'{q_table_usable_ace[i, j]:.2f}')
-                color = 'lightcoral' if action_table_usable_ace[i, j] == 'hit' else 'lightblue'
+                color = 'lightcoral' if action_table_usable_ace[i,
+                                                                j] == 'hit' else 'lightblue'
                 row_colors.append(color)
             cell_text_usable_ace.append(row_text)
             cell_colors_usable_ace.append(row_colors)
-        
+
         ax[0].axis('tight')
         ax[0].axis('off')
-        table_usable_ace = ax[0].table(cellText=cell_text_usable_ace, 
-                                    cellColours=cell_colors_usable_ace,
-                                    rowLabels=np.arange(4, 22), 
-                                    colLabels=np.arange(1, 11), 
-                                    cellLoc='center', 
-                                    loc='center')
-        ax[0].invert_yaxis()  # Reverse the y-axis
+        table_usable_ace = ax[0].table(cellText=cell_text_usable_ace,
+                                       cellColours=cell_colors_usable_ace,
+                                       rowLabels=np.arange(4, 22),
+                                       colLabels=np.arange(1, 11),
+                                       cellLoc='center',
+                                       loc='center')
         ax[0].set_title('Q-values with Usable Ace')
 
         # Table for non-usable ace
@@ -139,20 +138,20 @@ class MonteCarloAgentEpsilonGreedy:
             row_colors = []
             for j in range(10):
                 row_text.append(f'{q_table_non_usable_ace[i, j]:.2f}')
-                color = 'lightcoral' if action_table_non_usable_ace[i, j] == 'hit' else 'lightblue'
+                color = 'lightcoral' if action_table_non_usable_ace[i,
+                                                                    j] == 'hit' else 'lightblue'
                 row_colors.append(color)
             cell_text_non_usable_ace.append(row_text)
             cell_colors_non_usable_ace.append(row_colors)
-        
+
         ax[1].axis('tight')
         ax[1].axis('off')
-        table_non_usable_ace = ax[1].table(cellText=cell_text_non_usable_ace, 
-                                        cellColours=cell_colors_non_usable_ace,
-                                        rowLabels=np.arange(4, 22), 
-                                        colLabels=np.arange(1, 11), 
-                                        cellLoc='center', 
-                                        loc='center')
-        ax[1].invert_yaxis()  # Reverse the y-axis
+        table_non_usable_ace = ax[1].table(cellText=cell_text_non_usable_ace,
+                                           cellColours=cell_colors_non_usable_ace,
+                                           rowLabels=np.arange(4, 22),
+                                           colLabels=np.arange(1, 11),
+                                           cellLoc='center',
+                                           loc='center')
         ax[1].set_title('Q-values without Usable Ace')
 
         plt.show()
@@ -161,29 +160,32 @@ class MonteCarloAgentEpsilonGreedy:
 if __name__ == "__main__":
     env = gym.make('Blackjack-v1', natural=False, sab=False)
 
-    # Create an instance of the MonteCarloAgent class
-    agent = MonteCarloAgentEpsilonGreedy(
-        env, discount_factor=1, epsilon=0.1)
+    # Create an instance of the Q-learning agent class
+    agent = QlearningAgent(
+        env, discount_factor=1, exploration_rate=0.95, learning_rate=0.01)
 
-    num_episodes = 1000000
+    num_episodes = 500000
 
     for e in range(num_episodes):
 
-        episode = []
         terminated = False
         truncated = False
         # Choose initial state randomly
-        observation, info = env.reset()
+        obs, info = env.reset()
+        
+        # Loop for each episode
+        while (not (truncated or terminated)): 
 
-        while (not terminated and not truncated):  # Loop for each episode
-
-            action = agent.get_action(observation)
+            action = agent.get_action(obs)
 
             next_obs, reward, terminated, truncated, info = env.step(action)
-            episode.append((observation, action, reward))
-        agent.update_Q_values(episode)
-    
-   
+            done = terminated or truncated
+            agent.update_Q_values(obs, action, reward, next_obs, done)
+            obs = next_obs
+
+        if (e % 10000 == 0):
+            print(f'Episode {e}/{num_episodes}')
+
     agent.plot_Q_values()
 
     env.close()

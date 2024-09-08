@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Author: Marco Meschini
-# Created: 2024-09-06
+# Created: 06-09-2024
 #
 
 """
@@ -100,10 +100,12 @@ class windy_gridworld():
             elif (action == "west"):
                 next_state = (x-1, y - self.wind[x])
 
-            if (next_state[0] < 0 or next_state[0] > self.dim1-1 or next_state[1] < 0 or next_state[1] > self.dim2-1):  # Out of grid
+            # Out of grid
+            if (next_state[0] < 0 or next_state[0] > self.dim1-1 or next_state[1] < 0 or next_state[1] > self.dim2-1):
                 reward = -2
-                # State for going out of the grid
-                return (-1, -1), reward, True
+                # Pay attention, if the agent goes out of the grid, in the update function (not terminated) is 0,
+                # so the Q-value of the next state is 0
+                return (2, 2), reward, True
 
             elif (next_state == self.goal):
                 reward = 10
@@ -150,10 +152,6 @@ class SARSA_Agent():
             for action in ["north", "south", "east", "west"]:
                 self.Q[state][action] = 0
 
-        # Implement a state for going out of the grid
-        self.Q[(-1, -1)] = {}
-        self.Q[(-1, -1)]["north"] = -5
-
     def choose_action(self, state):
         """Chooses the next action to be taken by the agent.
 
@@ -169,7 +167,7 @@ class SARSA_Agent():
             action = max(self.Q[state], key=self.Q[state].get)
         return action
 
-    def update_Q(self, state, action, reward, next_state, next_action):
+    def update_Q(self, state, action, reward, next_state, next_action, terminated):
         """Updates the Q-value for the state-action pair.
 
         Args:
@@ -180,8 +178,8 @@ class SARSA_Agent():
             next_action (str): Next action to be taken by the agent.
         """
         self.Q[state][action] = self.Q[state][action] + self.alpha * \
-            (reward + self.gamma * self.Q[next_state]
-             [next_action] - self.Q[state][action])
+            (reward + self.gamma * (not terminated) *
+             self.Q[next_state][next_action] - self.Q[state][action])
 
     def print_best_policy(self, wg):
         """
@@ -226,10 +224,10 @@ def main():
     agent = SARSA_Agent(wg)
 
     num_episodes = 10000
-    n_steps = [0] * num_episodes # Store the number of steps for each episode
+    n_steps = [0] * num_episodes  # Store the number of steps for each episode
     for episode in range(num_episodes):
         if (episode % 1000 == 0):
-            print(episode)
+            print(f'Episode {episode}/{num_episodes}')
         terminated = False
         state = wg.start
         steps = 0
@@ -238,30 +236,30 @@ def main():
             action = agent.choose_action(state)
             next_state, reward, terminated = wg.move(state, action)
             steps += 1
-            # This is the case when the agent goes out of the grid, used only to update the Q-value
-            if next_state == (-1, -1):
-                agent.update_Q(state, action, reward, (-1, -1), "north")
-                break
             next_action = agent.choose_action(next_state)
-            agent.update_Q(state, action, reward, next_state, next_action)
+            agent.update_Q(state, action, reward, next_state,
+                           next_action, terminated)
             state = next_state
             # Print the last episode
             if episode == num_episodes-1:
                 wg.print_grid(state)
         n_steps[episode] = steps
-        
-    #Print information about the performance of the agent and the best policy
-    print("\n")            
+
+    # Print information about the performance of the agent and the best policy
+    print("\n")
     agent.print_best_policy(wg)
     mean_steps = mean(n_steps[-100:])
     print(mean_steps)
 
     plt.figure(figsize=(10, 5))
-    plt.plot(range(100, num_episodes), n_steps[100:], label='Steps per Episode')
+    plt.plot(range(100, num_episodes),
+             n_steps[100:], label='Steps per Episode')
     plt.xlabel('Episode')
     plt.ylabel('Number of Steps')
     plt.title('Number of Steps per Episode in SARSA Windy Gridworld')
     plt.legend()
     plt.show()
+
+
 if __name__ == "__main__":
     main()
