@@ -10,7 +10,7 @@ To run the code, first of all, clone the repository.
 git clone https://github.com/meskoj/Reinforcement-Learning.git
 ```
 Then, it is possible to select the exercise and run it using python.
-For each environment, some solutions using different approaches may be provided. In that cases, is possible to compare the different approaches and find the most suitable.
+ For each environment, multiple solutions based on different approaches may be provided. In such cases, you can compare the various approaches to determine which one is the most suitable for the given environment.
 
 ## About the Book
 "Reinforcement Learning: An Introduction" by Richard S. Sutton and Andrew G. Barto is a comprehensive guide to the field of reinforcement learning. The book covers a wide range of topics, including dynamic programming, Monte Carlo methods, temporal-difference learning, function approximation, and more. It is considered an essential resource for anyone interested in learning and applying RL.
