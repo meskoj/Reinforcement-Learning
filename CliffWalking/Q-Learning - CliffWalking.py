@@ -5,32 +5,15 @@
 #
 
 """
-Q-Learning - Blackjack.py
+Module Name: CliffWalking.py
 
-This module implements the Blackjack game using the OpenAI Gym environment and the algorithm used is Q-learning.
+This module implements Q-Learning algorithm to solve the Cliff Walking problem.
 """
-
-"""NOTE: The game of Blackjack starts with the player having 2 cards and the dealer with two cards with one faced down, while other faced up.
-Now the player can have the sum of those cards from 2 to 22. Minimum in the case where they receive two aces and keep there values as 1 each 
-or maximum when the keep there values to be 11 each.
-
-Now when the sum is 22, and the player chooses to hit he may get a card with value 10, resulting in a sum of 32, and thus loosing the game.
-Also the dealer can have only cards with value 1-10 (where 1 is ace), which accounts to 10 possible values.
-
-But it seems the programmers also kept the not possible states of 0 sum or 0 value card with dealer.
-Thus the observation space being a tuple (Discrete(32), Discrete(11), Discrete(2)).."""
-"""Possible actions:
-    0: Stick
-    1: Hit
-"""
-
-
-
-
 import gymnasium as gym
 from collections import defaultdict
 import numpy as np
 import plots as pl
+
 
 class QlearningAgent:
     def __init__(
@@ -80,42 +63,50 @@ class QlearningAgent:
             (reward + self.gamma *
              (not done) * np.max(self.Q[next_state]) - self.Q[state][action])
 
-
-if __name__ == "__main__":
-    env = gym.make('Blackjack-v1', natural=False, sab=False)
-
-    # Create an instance of the Q-learning agent class
+def main(): 
+    env = gym.make('CliffWalking-v0')
     agent = QlearningAgent(
         env, discount_factor=1, exploration_rate=0.1, learning_rate=0.01)
 
-    num_episodes = 500000
+    num_episodes = 30000
+    n_steps = [0] * num_episodes  # Store the number of steps for each episode
+    rewards = [0] * num_episodes  # Store the rewards for each episode
 
     for episode in range(num_episodes):
 
-        if (episode % 10000 == 0):
-            print(f'Episode {episode}/{num_episodes}')
-
+        if episode % 1000 == 0:
+            print(f"Episode {episode}/{num_episodes}")
         terminated = False
         truncated = False
         # Choose initial state randomly
         state, info = env.reset()
 
-        # Render the environment for the last 10 episodes
-        if episode + 10 == num_episodes:
-            env = gym.make('Blackjack-v1', natural=False,
-                           sab=False, render_mode='human')
+        # Render the environment for the last episode
+        if episode + 1 == num_episodes:
+            env = gym.make('CliffWalking-v0', render_mode='human')
             state, info = env.reset()
             env.render()
 
+        steps = 0
         # Loop for each episode
         while (not (truncated or terminated)):
-
+            
             action = agent.get_action(state)
             next_state, reward, terminated, truncated, info = env.step(action)
             done = terminated or truncated
             agent.update_Q(state, action, reward, next_state, done)
+            
             state = next_state
-
-    pl.plot_policy(agent.Q)
-
+            steps += 1
+            rewards[episode] += reward
+        n_steps[episode] = steps
+    
+    # Plot the rewards obtained by the agent at each episode    
+    pl.plot_rewards_overtime(rewards, range=(0, num_episodes))
+    # Plot the number of steps taken by the agent at each episode for the last 100 episodes
+    pl.plot_steps_overtime(n_steps, range=(num_episodes-100, num_episodes))
+    
     env.close()
+
+if __name__ == "__main__":
+    main()
