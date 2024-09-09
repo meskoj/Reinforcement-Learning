@@ -9,6 +9,7 @@ Module Name: GridWorld.py
 
 This module implements the Dynamic Programming algorithm to solve the Gridworld problem.
 """
+
 import pandas as pd  # Used only to format the final result
 
 DIM1 = 5
@@ -78,7 +79,7 @@ def policy_evaluation(actions, states, value_function):
     Args:
         actions (list): List of possible actions that the agent can take.
         states (list): List of all possible states in the gridworld.
-        value_function (dic): List of values for each state in the gridworld.
+        value_function (dict): List of values for each state in the gridworld.
 
     Returns:
         float: Value function for the given policy.
@@ -111,7 +112,7 @@ def policy_improvement(actions, states, value_function, policy):
     Args:
         actions (list): List of possible actions that the agent can take.
         states (list): List of all possible states in the gridworld.
-        value_function (dic): List of values for each state in the gridworld.
+        value_function (dict): List of values for each state in the gridworld.
         policy (list): List of actions for each state, based on the current policy.
 
     Returns:
@@ -167,7 +168,7 @@ def main():
 
     value_df = pd.DataFrame(value_data)
     policy_df = pd.DataFrame(policy_data)
-    
+
     print("\n")
     print("Value Function:")
     print(value_df.to_string(index=False, header=False))
