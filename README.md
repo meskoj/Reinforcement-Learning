@@ -1,7 +1,3 @@
-# ⚠️ Work In Progress ⚠️
-_This repository is currently under development, and more exercises and examples will be added regularly. Stay tuned for updates!_
-
-
 This repository contains practical examples from the book "Reinforcement Learning: An Introduction" by Richard S. Sutton and Andrew G. Barto. Additionally, it includes exercises based on OpenAI GYMnasium. The code in this repository is designed to be easy to understand and modify. However, it is important to note that in some cases, there may be more efficient or optimized solutions to the exercises.
 
 ## Usage
